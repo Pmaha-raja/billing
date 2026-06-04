@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hotel Billing Software</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qz-tray/2.2.4/qz-tray.js"></script>
+<style>
+:root{
+  --bg:#f8f9fa; --white:#ffffff; --surface:#f1f3f5;
+  --border:#e2e8f0; --border2:#cbd5e1;
+  --primary:#1e40af; --primary2:#2563eb; --primary3:#3b82f6; --primary-dim:rgba(37,99,235,0.1);
+  --text:#0f172a; --text2:#334155; --muted:#64748b; --dim:#94a3b8;
+  --green:#16a34a; --green-dim:rgba(22,163,74,0.1);
+  --red:#dc2626; --red-dim:rgba(220,38,38,0.1);
+  --amber:#d97706; --amber-dim:rgba(217,119,6,0.1);
+  --purple:#7c3aed; --purple-dim:rgba(124,58,237,0.1);
+  --shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 15px rgba(0,0,0,0.1),0 4px 6px rgba(0,0,0,0.05);
+  --radius:10px; --radius-lg:14px;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;background:var(--primary);min-height:100vh;
+  display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;
+  z-index:100;box-shadow:var(--shadow-lg);
+}
+.sb-logo{
+  padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.1);
+}
+.sb-logo .hotel-name{font-size:16px;font-weight:700;color:#fff;line-height:1.2}
+.sb-logo .hotel-tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px}
+.sb-logo .version{font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
+.sb-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;
+  cursor:pointer;border:none;background:none;color:rgba(255,255,255,0.7);
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  transition:all .18s;text-align:left;width:100%;
+}
+.nav-item:hover{background:rgba(255,255,255,0.12);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.2);color:#fff;font-weight:600}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-div{height:1px;background:rgba(255,255,255,0.1);margin:6px 8px}
+.sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.4);text-align:center}
+
+/* ── MAIN ── */
+.main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 24px;height:58px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:50;
+  box-shadow:var(--shadow);
+}
+.topbar-title{font-size:18px;font-weight:700;color:var(--text)}
+.topbar-title .tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:13px;color:var(--muted);margin-left:8px;font-weight:400}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.time-badge{font-size:12px;color:var(--muted);font-weight:500;background:var(--surface);padding:5px 12px;border-radius:20px;border:1px solid var(--border)}
+.date-badge{font-size:12px;font-weight:600;color:var(--primary2);background:var(--primary-dim);padding:5px 12px;border-radius:20px}
+
+/* ── PAGES ── */
+.page{display:none;padding:24px;flex:1}
+.page.active{display:block}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+.page-title{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.page-title .sub{font-family:'Noto Sans Tamil',sans-serif;font-size:13px;color:var(--muted);font-weight:400;margin-top:3px;display:block}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;box-shadow:var(--shadow);transition:all .2s;position:relative;overflow:hidden;
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--c,var(--primary2))}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.stat-card.s-blue{--c:var(--primary2)}
+.stat-card.s-green{--c:var(--green)}
+.stat-card.s-amber{--c:var(--amber)}
+.stat-card.s-purple{--c:var(--purple)}
+.stat-card.s-red{--c:var(--red)}
+.stat-icon{font-size:28px;margin-bottom:10px}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stat-value{font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.stat-card.s-blue .stat-value{color:var(--primary2)}
+.stat-card.s-green .stat-value{color:var(--green)}
+.stat-card.s-amber .stat-value{color:var(--amber)}
+.stat-card.s-purple .stat-value{color:var(--purple)}
+.stat-card.s-red .stat-value{color:var(--red)}
+.stat-sub{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* ── CARD ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+.card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--white)}
+.card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.card-body{padding:18px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;transition:all .18s;border:none;white-space:nowrap}
+.btn-primary{background:var(--primary2);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.3)}
+.btn-primary:hover{background:var(--primary);box-shadow:0 4px 12px rgba(37,99,235,0.4)}
+.btn-success{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(22,163,74,0.25)}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-outline{background:var(--white);border:1.5px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--primary3);color:var(--primary2);background:var(--primary-dim)}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-amber:hover{background:#b45309}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:6px 13px;font-size:12px;border-radius:7px}
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px}
+
+/* ── FORM ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.form-input,.form-select,.form-textarea{width:100%;padding:9px 12px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:all .18s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--primary2);box-shadow:0 0 0 3px var(--primary-dim)}
+.form-input::placeholder{color:var(--dim)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-textarea{resize:vertical;min-height:70px}
+
+/* ── POS / BILLING ── */
+.pos-layout{display:grid;grid-template-columns:1fr 380px;gap:18px;height:calc(100vh - 106px);min-height:600px}
+.pos-items{overflow-y:auto;padding-right:4px}
+.pos-bill{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
+
+/* Category chips */
+.cat-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cat-chip{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;cursor:pointer;color:var(--muted);font-weight:500;transition:all .18s}
+.cat-chip:hover{border-color:var(--primary3);color:var(--primary2)}
+.cat-chip.active{background:var(--primary2);border-color:var(--primary2);color:#fff;font-weight:600}
+
+/* Search bar */
+.search-bar{position:relative;margin-bottom:14px}
+.search-bar input{width:100%;padding:9px 14px 9px 38px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:13.5px;outline:none;background:var(--white);transition:border-color .18s}
+.search-bar input:focus{border-color:var(--primary2);box-shadow:0 0 0 3px var(--primary-dim)}
+.search-bar .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.4;pointer-events:none}
+
+/* Menu grid */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.menu-item-card{
+  background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;cursor:pointer;transition:all .18s;
+}
+.menu-item-card:hover{border-color:var(--primary3);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.menu-item-card.in-cart{border-color:var(--primary2);background:var(--primary-dim)}
+.menu-item-card .mi-img{width:100%;height:90px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:32px;overflow:hidden}
+.menu-item-card .mi-img img{width:100%;height:100%;object-fit:cover}
+.menu-item-card .mi-body{padding:8px 10px}
+.menu-item-card .mi-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-item-card .mi-tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.menu-item-card .mi-price{font-size:13px;font-weight:700;color:var(--primary2);margin-top:3px}
+.menu-item-card .mi-qty{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 8px;background:var(--primary-dim);border-top:1px solid var(--border)}
+.qty-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--primary2);background:var(--white);color:var(--primary2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.qty-btn:hover{background:var(--primary2);color:#fff}
+.qty-num{font-size:13px;font-weight:700;color:var(--primary2);min-width:20px;text-align:center}
+
+/* Bill panel */
+.bill-head{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--primary2)}
+.bill-head h3{font-size:15px;font-weight:700;color:#fff}
+.bill-meta{display:flex;gap:8px;margin-top:6px}
+.bill-input{
+  flex:1;padding:5px 9px;border:1px solid rgba(255,255,255,0.3);border-radius:6px;
+  background:rgba(255,255,255,0.15);color:#fff;font-family:'Inter',sans-serif;
+  font-size:12px;outline:none;
+}
+.bill-input::placeholder{color:rgba(255,255,255,0.6)}
+.bill-items{flex:1;overflow-y:auto;padding:10px}
+.bill-empty{text-align:center;padding:40px 20px;color:var(--dim);font-size:13px}
+.bill-item-row{
+  display:flex;align-items:center;gap:8px;padding:7px 6px;
+  border-bottom:1px solid var(--border);transition:background .15s;
+}
+.bill-item-row:hover{background:var(--surface)}
+.bir-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.bir-tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:10px;color:var(--muted)}
+.bir-qty-wrap{display:flex;align-items:center;gap:5px}
+.bir-qty{font-size:13px;font-weight:700;color:var(--primary2);min-width:20px;text-align:center}
+.bir-price{font-size:13px;font-weight:700;color:var(--text);min-width:60px;text-align:right}
+.bir-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:3px;opacity:.6;transition:opacity .15s}
+.bir-del:hover{opacity:1}
+.bill-summary{padding:12px 14px;border-top:1.5px solid var(--border);background:var(--surface)}
+.bill-sum-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;color:var(--muted)}
+.bill-sum-row.total{font-weight:800;font-size:16px;color:var(--text);border-top:1px solid var(--border);padding-top:8px;margin-top:6px;margin-bottom:0}
+.bill-sum-row.total span:last-child{color:var(--primary2)}
+.bill-actions{padding:12px;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border)}
+.pay-mode-row{display:flex;gap:6px;margin-bottom:4px}
+.pay-btn{flex:1;padding:7px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--muted)}
+.pay-btn.active{border-color:var(--primary2);background:var(--primary-dim);color:var(--primary2)}
+.bill-action-row{display:flex;gap:8px}
+
+/* ── ITEMS MANAGEMENT ── */
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.item-mgmt-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);transition:all .2s}
+.item-mgmt-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.imc-img{width:100%;height:120px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden;position:relative}
+.imc-img img{width:100%;height:100%;object-fit:cover}
+.imc-avail{position:absolute;top:7px;right:7px;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 2px #fff}
+.imc-body{padding:12px}
+.imc-name{font-weight:700;font-size:14px;color:var(--text)}
+.imc-tamil{font-family:'Noto Sans Tamil',sans-serif;font-size:12px;color:var(--muted)}
+.imc-price{font-size:16px;font-weight:800;color:var(--primary2);margin:5px 0}
+.imc-cat{font-size:11px;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:6px;display:inline-block}
+.imc-actions{display:flex;gap:6px;padding:0 12px 12px}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--primary2)}
+thead th{padding:11px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,0.9);white-space:nowrap;border-bottom:none}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface)}
+tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text)}
+.tbl-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+
+/* Badges */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+.badge-paid{background:var(--green-dim);color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.badge-pending{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,119,6,.2)}
+.badge-cancel{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,.2)}
+
+/* Charts */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.chart-box{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow)}
+.chart-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px}
+.chart-canvas-wrap{position:relative;height:220px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:480px;max-width:95vw;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .25s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--primary2)}
+.modal-head h3{font-size:16px;font-weight:700;color:#fff}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;transition:color .15s;padding:4px}
+.modal-close:hover{color:#fff}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:var(--surface)}
+
+/* Print area */
+#print-area{display:none}
+@media print{
+  body>*{display:none!important}
+  #print-area{display:block!important;font-family:'Courier New',monospace;max-width:300px;margin:0 auto;font-size:12px}
+  .print-shop{text-align:center;margin-bottom:10px}
+  .print-shop h2{font-size:16px;font-weight:900;letter-spacing:1px}
+  .print-divider{border:none;border-top:1px dashed #555;margin:8px 0}
+  .print-row{display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px}
+  .print-row.total{font-weight:900;font-size:14px;border-top:1px dashed #555;padding-top:6px;margin-top:4px}
+  .print-footer{text-align:center;margin-top:10px;font-size:11px;color:#555}
+  .print-tamil{font-family:serif}
+}
+
+/* Loading */
+.spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--primary2);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-state{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+.empty-icon{font-size:40px;margin-bottom:10px}
+
+/* Toast */
+.toast-wrap{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px}
+.toast{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--text2);box-shadow:var(--shadow-lg);animation:slideIn .25s ease;min-width:220px;display:flex;align-items:center;gap:8px}
+@keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--primary2)}
+
+/* Upload */
+.upload-zone{border:2px dashed var(--border2);border-radius:9px;padding:16px;text-align:center;cursor:pointer;transition:all .18s;background:var(--surface);position:relative}
+.upload-zone:hover{border-color:var(--primary3);background:var(--primary-dim)}
+.upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+#item-img-preview{width:100%;height:100px;object-fit:cover;border-radius:7px;margin-top:8px;display:none;border:1px solid var(--border)}
+
+/* Next day orders */
+.ndorder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.ndorder-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);text-align:center;position:relative}
+.ndorder-card .ndo-qty{font-size:32px;font-weight:800;color:var(--primary2);line-height:1}
+.ndorder-card .ndo-name{font-size:13px;font-weight:600;color:var(--text);margin-top:4px}
+.ndorder-card .ndo-del{position:absolute;top:7px;right:7px;background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;opacity:.5;transition:opacity .15s}
+.ndorder-card .ndo-del:hover{opacity:1}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}.main{margin-left:0}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .pos-layout{grid-template-columns:1fr}
+  .chart-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- PRINT AREA -->
+<div id="print-area"></div>
+
+<!-- ITEM MODAL -->
+<div class="modal-bg" id="item-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="item-modal-title">Add Menu Item</h3>
+      <button class="modal-close" onclick="closeItemModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Item Name (English) *</label><input class="form-input" id="im-name" placeholder="e.g. Chicken Biryani"/></div>
+        <div class="form-group"><label class="form-label">பெயர் (Tamil)</label><input class="form-input" id="im-tamil" placeholder="சிக்கன் பிரியாணி" style="font-family:'Noto Sans Tamil',sans-serif"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Price (₹) *</label><input class="form-input" type="number" id="im-price" placeholder="120"/></div>
+        <div class="form-group"><label class="form-label">Category</label>
+          <select class="form-select" id="im-category">
+            <option value="rice">🍚 Rice / சாதம்</option>
+            <option value="curry">🍛 Curry / குழம்பு</option>
+            <option value="biryani">🍖 Biryani / பிரியாணி</option>
+            <option value="roti">🫓 Roti / சப்பாத்தி</option>
+            <option value="snacks">🥟 Snacks / சிற்றுண்டி</option>
+            <option value="drinks">🥤 Drinks / பானங்கள்</option>
+            <option value="dessert">🍮 Dessert / இனிப்பு</option>
+            <option value="other">📦 Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Image</label>
+        <div class="upload-zone">
+          <input type="file" id="im-img-file" accept="image/*" onchange="previewItemImg(event)"/>
+          <div>📷 <span style="font-size:12px;color:var(--muted)">Click to upload image</span></div>
+        </div>
+        <img id="item-img-preview" alt="preview"/>
+        <input class="form-input" id="im-img-url" placeholder="Or paste image URL..." style="margin-top:8px"/>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <input type="checkbox" id="im-available" checked style="accent-color:var(--primary2);width:16px;height:16px"/>
+        Available / கிடைக்கும்
+      </label>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeItemModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()" id="item-save-btn">💾 Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEXT DAY ORDER MODAL -->
+<div class="modal-bg" id="ndo-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-head"><h3>Add Next Day Order / நாளை ஆர்டர்</h3><button class="modal-close" onclick="closeNdoModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Date / தேதி</label><input class="form-input" type="date" id="ndo-date"/></div>
+      <div class="form-group"><label class="form-label">Select Item / ஐட்டம்</label>
+        <select class="form-select" id="ndo-item"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Quantity / அளவு *</label><input class="form-input" type="number" id="ndo-qty" placeholder="10" min="1"/></div>
+      <div class="form-group"><label class="form-label">Notes / குறிப்பு</label><input class="form-input" id="ndo-notes" placeholder="Special instructions..."/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeNdoModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNdo()">💾 Save Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal" style="width:520px">
+    <div class="modal-head"><h3>⚙️ Settings / அமைப்புகள்</h3><button class="modal-close" onclick="closeSettingsModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Hotel Name (English)</label><input class="form-input" id="s-name" placeholder="My Hotel"/></div>
+        <div class="form-group"><label class="form-label">பெயர் (Tamil)</label><input class="form-input" id="s-tamil" style="font-family:'Noto Sans Tamil',sans-serif" placeholder="என் ஹோட்டல்"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Address / முகவரி</label><textarea class="form-textarea" id="s-address" placeholder="123 Main St, City"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone / தொலைபேசி</label><input class="form-input" id="s-phone" placeholder="9876543210"/></div>
+        <div class="form-group"><label class="form-label">GST Number</label><input class="form-input" id="s-gst-no" placeholder="27AAAA0000A1Z5"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">GST % (0 for no GST)</label><input class="form-input" type="number" id="s-gst-pct" placeholder="5" step="0.5"/></div>
+        <div class="form-group"><label class="form-label">Bill Footer Text</label><input class="form-input" id="s-footer" placeholder="Thank you! Visit Again"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Printer Name (Windows)</label><input class="form-input" id="s-printer" placeholder="e.g. XP-58, RONGTA RP80"/></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeSettingsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="hotel-name" id="sb-hotel-name">My Hotel</div>
+    <div class="hotel-tamil" id="sb-hotel-tamil">என் ஹோட்டல்</div>
+    <div class="version">Billing v1.0</div>
+  </div>
+  <nav class="sb-nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('billing',this)"><span class="nav-icon">🧾</span>New Bill / பில்</button>
+    <button class="nav-item" onclick="showPage('bills',this)"><span class="nav-icon">📋</span>All Bills</button>
+    <div class="nav-div"></div>
+    <button class="nav-item" onclick="showPage('items',this)"><span class="nav-icon">🍽</span>Menu Items</button>
+    <button class="nav-item" onclick="showPage('nextday',this)"><span class="nav-icon">📅</span>Next Day Orders</button>
+    <div class="nav-div"></div>
+    <button class="nav-item" onclick="showPage('reports',this)"><span class="nav-icon">📈</span>Reports</button>
+    <button class="nav-item" onclick="openSettingsModal()"><span class="nav-icon">⚙️</span>Settings</button>
+  </nav>
+  <div class="sb-footer">Hotel Billing System</div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="topbar-title">Hotel Billing <span class="tamil">ஹோட்டல் பில்லிங்</span></span>
+    </div>
+    <div class="topbar-right">
+      <span class="time-badge" id="clock">--:--</span>
+      <span class="date-badge" id="date-badge">--</span>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div><div class="page-title">Dashboard <span class="sub">டாஷ்போர்டு</span></div></div>
+      <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↺ Refresh</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card s-blue"><div class="stat-icon">💰</div><div class="stat-label">Today's Sales</div><div class="stat-value" id="ds-sales">₹0</div><div class="stat-sub">இன்றைய விற்பனை</div></div>
+      <div class="stat-card s-green"><div class="stat-icon">🧾</div><div class="stat-label">Today's Bills</div><div class="stat-value" id="ds-bills">0</div><div class="stat-sub">இன்றைய பில்கள்</div></div>
+      <div class="stat-card s-amber"><div class="stat-icon">🍽</div><div class="stat-label">Items Sold</div><div class="stat-value" id="ds-items-sold">0</div><div class="stat-sub">விற்ற ஐட்டங்கள்</div></div>
+      <div class="stat-card s-purple"><div class="stat-icon">📦</div><div class="stat-label">Menu Items</div><div class="stat-value" id="ds-menu">0</div><div class="stat-sub">மெனு ஐட்டங்கள்</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div class="card">
+        <div class="card-head"><div class="card-title">📈 Week Sales</div></div>
+        <div class="card-body"><div style="height:200px"><canvas id="week-chart"></canvas></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">🏆 Top Items Today</div></div>
+        <div class="card-body" id="top-items-list"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🕐 Recent Bills</div><button class="btn btn-outline btn-sm" onclick="showPage('bills',document.querySelectorAll('.nav-item')[2])">View All →</button></div>
+      <table><thead><tr><th>Bill #</th><th>Table</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Time</th></tr></thead>
+      <tbody id="recent-bills"></tbody></table>
+    </div>
+  </div>
+
+  <!-- BILLING / POS -->
+  <div class="page" id="page-billing">
+    <div class="page-header">
+      <div><div class="page-title">New Bill <span class="sub">புதிய பில்</span></div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="clearBill()">🗑 Clear</button>
+        <span style="font-size:13px;color:var(--muted);padding:7px 0">Bill # <b id="current-bill-no" style="color:var(--primary2)">--</b></span>
+      </div>
+    </div>
+    <div class="pos-layout">
+      <!-- LEFT: Menu -->
+      <div class="pos-items">
+        <div class="search-bar">
+          <span class="si">🔍</span>
+          <input type="text" placeholder="Search items... ஐட்டம் தேடுங்கள்" id="pos-search" oninput="posSearch(this.value)"/>
+        </div>
+        <div class="cat-row" id="pos-cats">
+          <button class="cat-chip active" onclick="posFilterCat('all',this)">All / அனைத்தும்</button>
+        </div>
+        <div class="menu-grid" id="pos-menu-grid">
+          <div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div>
+        </div>
+      </div>
+      <!-- RIGHT: Bill -->
+      <div class="pos-bill">
+        <div class="bill-head">
+          <h3>🧾 Current Bill / தற்போதைய பில்</h3>
+          <div class="bill-meta">
+            <input class="bill-input" type="text" id="b-table" placeholder="Table No / டேபிள்"/>
+            <input class="bill-input" type="text" id="b-customer" placeholder="Customer / வாடிக்கையாளர்"/>
+          </div>
+        </div>
+        <div class="bill-items" id="bill-items-list">
+          <div class="bill-empty">🍽 Add items from the menu<br><span style="font-family:'Noto Sans Tamil',sans-serif;font-size:12px">மெனுவிலிருந்து ஐட்டங்கள் சேர்க்கவும்</span></div>
+        </div>
+        <div class="bill-summary" id="bill-summary" style="display:none">
+          <div class="bill-sum-row"><span>Subtotal / மொத்தம்</span><span id="b-subtotal">₹0</span></div>
+          <div class="bill-sum-row" id="b-gst-row"><span>GST (<span id="b-gst-pct">5</span>%)</span><span id="b-gst-amt">₹0</span></div>
+          <div class="bill-sum-row total"><span>TOTAL / மொத்த தொகை</span><span id="b-total">₹0</span></div>
+        </div>
+        <div class="bill-actions">
+          <div class="pay-mode-row">
+            <button class="pay-btn active" data-mode="cash" onclick="selectPayMode(this)">💵 Cash</button>
+            <button class="pay-btn" data-mode="upi" onclick="selectPayMode(this)">📱 UPI</button>
+            <button class="pay-btn" data-mode="card" onclick="selectPayMode(this)">💳 Card</button>
+          </div>
+          <div class="bill-action-row">
+            <button class="btn btn-outline" style="flex:1" onclick="printBillPreview()">🖨 Print</button>
+            <button class="btn btn-success" style="flex:2" onclick="saveBill()" id="save-bill-btn">✅ Save & Print</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALL BILLS -->
+  <div class="page" id="page-bills">
+    <div class="page-header">
+      <div><div class="page-title">All Bills <span class="sub">அனைத்து பில்கள்</span></div></div>
+      <button class="btn btn-outline btn-sm" onclick="loadBills()">↺ Refresh</button>
+    </div>
+    <div class="tbl-toolbar">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="date" class="form-input" id="bill-date-filter" style="width:160px" oninput="loadBills()"/>
+        <select class="form-select" id="bill-pay-filter" style="width:140px" onchange="loadBills()">
+          <option value="">All Payment</option>
+          <option value="cash">Cash</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;color:var(--muted)">Total: <b id="bills-total-amt" style="color:var(--primary2)">₹0</b></span>
+        <button class="btn btn-outline btn-sm" onclick="clearBillFilters()">Clear Filters</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th>Bill #</th><th>Date & Time</th><th>Table</th><th>Customer</th><th>Items</th><th>Subtotal</th><th>GST</th><th>Total</th><th>Payment</th><th>Actions</th></tr></thead>
+      <tbody id="all-bills-tbody"><tr><td colspan="10"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- MENU ITEMS -->
+  <div class="page" id="page-items">
+    <div class="page-header">
+      <div><div class="page-title">Menu Items <span class="sub">மெனு ஐட்டங்கள்</span></div></div>
+      <button class="btn btn-primary" onclick="openItemModal()">➕ Add Item</button>
+    </div>
+    <div class="tbl-toolbar">
+      <div class="cat-row" style="margin:0" id="items-cat-filter">
+        <button class="cat-chip active" onclick="filterMenuItems('all',this)">All</button>
+        <button class="cat-chip" onclick="filterMenuItems('rice',this)">🍚 Rice</button>
+        <button class="cat-chip" onclick="filterMenuItems('curry',this)">🍛 Curry</button>
+        <button class="cat-chip" onclick="filterMenuItems('biryani',this)">🍖 Biryani</button>
+        <button class="cat-chip" onclick="filterMenuItems('roti',this)">🫓 Roti</button>
+        <button class="cat-chip" onclick="filterMenuItems('snacks',this)">🥟 Snacks</button>
+        <button class="cat-chip" onclick="filterMenuItems('drinks',this)">🥤 Drinks</button>
+        <button class="cat-chip" onclick="filterMenuItems('dessert',this)">🍮 Dessert</button>
+      </div>
+    </div>
+    <div class="items-grid" id="items-grid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- NEXT DAY ORDERS -->
+  <div class="page" id="page-nextday">
+    <div class="page-header">
+      <div><div class="page-title">Next Day Orders <span class="sub">நாளை ஆர்டர் பட்டியல்</span></div></div>
+      <button class="btn btn-primary" onclick="openNdoModal()">➕ Add Order</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+      <input type="date" class="form-input" id="ndo-filter-date" style="width:170px" oninput="loadNextDayOrders()"/>
+      <button class="btn btn-outline btn-sm" onclick="setTomorrow()">Tomorrow</button>
+      <button class="btn btn-outline btn-sm" onclick="printNdo()">🖨 Print List</button>
+    </div>
+    <div id="ndo-grid" class="ndorder-grid"><div class="loading-state" style="grid-column:1/-1"><div class="spinner"></div></div></div>
+    <div class="tbl-wrap" style="margin-top:18px">
+      <table><thead><tr><th>Date</th><th>Item</th><th>Quantity</th><th>Notes</th><th>Action</th></tr></thead>
+      <tbody id="ndo-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="page-header">
+      <div><div class="page-title">Reports <span class="sub">அறிக்கைகள்</span></div></div>
+      <div style="display:flex;gap:8px">
+        <input type="date" id="rpt-from" class="form-input" style="width:150px"/>
+        <input type="date" id="rpt-to" class="form-input" style="width:150px"/>
+        <button class="btn btn-primary btn-sm" onclick="loadReports()">📊 Generate</button>
+      </div>
+    </div>
+    <div class="stats-row" style="grid-template-columns:repeat(5,1fr)">
+      <div class="stat-card s-blue"><div class="stat-label">Total Revenue</div><div class="stat-value" id="r-revenue" style="font-size:22px">₹0</div></div>
+      <div class="stat-card s-green"><div class="stat-label">Total Bills</div><div class="stat-value" id="r-bills">0</div></div>
+      <div class="stat-card s-amber"><div class="stat-label">Avg Bill</div><div class="stat-value" id="r-avg" style="font-size:22px">₹0</div></div>
+      <div class="stat-card s-purple"><div class="stat-label">Cash Sales</div><div class="stat-value" id="r-cash" style="font-size:22px">₹0</div></div>
+      <div class="stat-card s-red"><div class="stat-label">UPI / Card</div><div class="stat-value" id="r-digital" style="font-size:22px">₹0</div></div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box"><div class="chart-title">📅 Daily Sales</div><div class="chart-canvas-wrap"><canvas id="rpt-daily-chart"></canvas></div></div>
+      <div class="chart-box"><div class="chart-title">💳 Payment Mode Split</div><div class="chart-canvas-wrap"><canvas id="rpt-pay-chart"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🏆 Top Selling Items</div></div>
+      <div class="card-body" id="rpt-top-items"><div class="loading-state"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📋 Bills in Range</div>
+        <button class="btn btn-outline btn-sm" onclick="printReport()">🖨 Print Report</button>
+      </div>
+      <table><thead><tr><th>Bill #</th><th>Date</th><th>Table</th><th>Customer</th><th>Total</th><th>Payment</th></tr></thead>
+      <tbody id="rpt-bills-tbody"></tbody></table>
+    </div>
+  </div>
+
+</div><!-- end .main -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://bnvibraltvskfaheufqa.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJudmlicmFsdHZza2ZhaGV1ZnFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyOTcyODcsImV4cCI6MjA5NTg3MzI4N30.ZulaYQyUsxQNV4l_2kLUs6EfwhEt3N2hAoOPBPP3hoU';
+const{createClient}=supabase;
+const db=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+let allMenuItems=[],posCart={},posCurrentCat='all',payMode='cash';
+let settings={hotel_name:'My Hotel',hotel_name_tamil:'என் ஹோட்டல்',address:'',phone:'',gst_no:'',gst_percent:5,footer_text:'Thank you! Visit Again',printer_name:'XP-58'};
+let editingItemId=null,chartObjs={};
+
+// ── CLOCK ──
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('date-badge').textContent=n.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+setInterval(updateClock,1000);updateClock();
+
+// ── TOAST ──
+function toast(msg,type='info'){
+  const w=document.getElementById('toast-wrap');
+  const el=document.createElement('div');el.className=`toast ${type}`;
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  el.innerHTML=`<span>${icons[type]||'ℹ️'}</span> ${msg}`;
+  w.appendChild(el);setTimeout(()=>el.remove(),3200);
+}
+
+// ── PAGE SWITCH ──
+const pageTitles={dashboard:'Dashboard',billing:'New Bill / புதிய பில்',bills:'All Bills',items:'Menu Items',nextday:'Next Day Orders',reports:'Reports'};
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='dashboard')loadDashboard();
+  else if(name==='billing')loadPosMenu();
+  else if(name==='bills')loadBills();
+  else if(name==='items')loadMenuItems();
+  else if(name==='nextday')loadNextDayOrders();
+  else if(name==='reports')initReportDates();
+}
+
+// ── SETTINGS ──
+async function loadSettings(){
+  const{data}=await db.from('hotel_settings').select('*').limit(1);
+  if(data&&data.length){
+    settings=data[0];
+    document.getElementById('sb-hotel-name').textContent=settings.hotel_name;
+    document.getElementById('sb-hotel-tamil').textContent=settings.hotel_name_tamil||'';
+    document.getElementById('b-gst-pct').textContent=settings.gst_percent||5;
+  }
+}
+function openSettingsModal(){
+  document.getElementById('s-name').value=settings.hotel_name||'';
+  document.getElementById('s-tamil').value=settings.hotel_name_tamil||'';
+  document.getElementById('s-address').value=settings.address||'';
+  document.getElementById('s-phone').value=settings.phone||'';
+  document.getElementById('s-gst-no').value=settings.gst_no||'';
+  document.getElementById('s-gst-pct').value=settings.gst_percent||5;
+  document.getElementById('s-footer').value=settings.footer_text||'';
+  document.getElementById('s-printer').value=settings.printer_name||'XP-58';
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettingsModal(){document.getElementById('settings-modal').classList.remove('open')}
+async function saveSettings(){
+  const obj={hotel_name:document.getElementById('s-name').value.trim(),hotel_name_tamil:document.getElementById('s-tamil').value.trim(),address:document.getElementById('s-address').value.trim(),phone:document.getElementById('s-phone').value.trim(),gst_no:document.getElementById('s-gst-no').value.trim(),gst_percent:parseFloat(document.getElementById('s-gst-pct').value)||5,footer_text:document.getElementById('s-footer').value.trim(),printer_name:document.getElementById('s-printer').value.trim()||'XP-58'};
+  const{error}=settings.id?await db.from('hotel_settings').update(obj).eq('id',settings.id):await db.from('hotel_settings').insert([obj]);
+  if(error){toast(error.message,'error');return;}
+  toast('Settings saved! / அமைப்புகள் சேமிக்கப்பட்டன','success');
+  closeSettingsModal();loadSettings();
+}
+
+// ── DASHBOARD ──
+async function loadDashboard(){
+  const today=new Date().toISOString().split('T')[0];
+  const{data:bills}=await db.from('hotel_bills').select('*').gte('created_at',today+'T00:00:00').lte('created_at',today+'T23:59:59');
+  const todayBills=bills||[];
+  const totalSales=todayBills.reduce((s,b)=>s+(b.total_amount||0),0);
+  const totalItemsSold=todayBills.reduce((s,b)=>{const items=Array.isArray(b.items)?b.items:[];return s+items.reduce((a,i)=>a+(i.qty||0),0)},0);
+  document.getElementById('ds-sales').textContent='₹'+totalSales.toLocaleString('en-IN');
+  document.getElementById('ds-bills').textContent=todayBills.length;
+  document.getElementById('ds-items-sold').textContent=totalItemsSold;
+  const{data:menuCount}=await db.from('hotel_items').select('id',{count:'exact'});
+  document.getElementById('ds-menu').textContent=menuCount?.length||0;
+  // Top items
+  const itemMap={};
+  todayBills.forEach(b=>{const items=Array.isArray(b.items)?b.items:[];items.forEach(i=>{if(!itemMap[i.name])itemMap[i.name]=0;itemMap[i.name]+=i.qty||1})});
+  const top=Object.entries(itemMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('top-items-list').innerHTML=top.length?top.map(([name,qty])=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${name}</span><b style="color:var(--primary2)">${qty} sold</b></div>`).join(''):'<div class="empty-state"><div class="empty-icon">📊</div>No sales today</div>';
+  // Recent bills
+  document.getElementById('recent-bills').innerHTML=todayBills.slice(0,8).map(b=>{
+    const t=new Date(b.created_at);
+    const items=Array.isArray(b.items)?b.items:[];
+    return`<tr><td><b>#${b.bill_no}</b></td><td>${b.table_no||'—'}</td><td>${b.customer_name||'—'}</td><td style="font-size:12px;color:var(--muted)">${items.map(i=>i.name).join(', ').substring(0,30)}...</td><td><b style="color:var(--primary2)">₹${b.total_amount}</b></td><td><span class="badge badge-paid">${b.payment_mode}</span></td><td style="font-size:11px;color:var(--muted)">${t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</td></tr>`;
+  }).join('')||'<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🧾</div>No bills today</div></td></tr>';
+  // Week chart
+  await loadWeekChart();
+}
+
+async function loadWeekChart(){
+  const labels=[],salesData=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=d.toISOString().split('T')[0];
+    labels.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+    const{data}=await db.from('hotel_bills').select('total_amount').gte('created_at',ds+'T00:00:00').lte('created_at',ds+'T23:59:59');
+    salesData.push((data||[]).reduce((s,b)=>s+(b.total_amount||0),0));
+  }
+  if(chartObjs['week-chart']){chartObjs['week-chart'].destroy();}
+  chartObjs['week-chart']=new Chart(document.getElementById('week-chart').getContext('2d'),{
+    type:'bar',data:{labels,datasets:[{label:'Sales ₹',data:salesData,backgroundColor:'rgba(37,99,235,0.7)',borderColor:'#2563eb',borderWidth:1,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:11}}}}}
+  });
+}
+
+// ── POS MENU ──
+async function loadPosMenu(){
+  if(!allMenuItems.length){
+    const{data}=await db.from('hotel_items').select('*').eq('is_available',true).order('category');
+    allMenuItems=data||[];
+  }
+  // Get next bill no
+  const{data:lastBill}=await db.from('hotel_bills').select('bill_no').order('bill_no',{ascending:false}).limit(1);
+  document.getElementById('current-bill-no').textContent=(lastBill&&lastBill.length)?(lastBill[0].bill_no+1):1;
+  // Build category chips
+  const cats=[...new Set(allMenuItems.map(i=>i.category))].filter(Boolean);
+  const catEmojis={rice:'🍚',curry:'🍛',biryani:'🍖',roti:'🫓',snacks:'🥟',drinks:'🥤',dessert:'🍮',other:'📦'};
+  document.getElementById('pos-cats').innerHTML=`<button class="cat-chip active" onclick="posFilterCat('all',this)">All / அனைத்தும்</button>`+cats.map(c=>`<button class="cat-chip" onclick="posFilterCat('${c}',this)">${catEmojis[c]||'📦'} ${c.charAt(0).toUpperCase()+c.slice(1)}</button>`).join('');
+  renderPosMenu(allMenuItems);
+}
+
+function renderPosMenu(items){
+  const grid=document.getElementById('pos-menu-grid');
+  if(!items.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🍽</div>No items found</div>`;return;}
+  grid.innerHTML=items.map(item=>{
+    const qty=posCart[item.id]?posCart[item.id].qty:0;
+    return`<div class="menu-item-card ${qty>0?'in-cart':''}" id="mic-${item.id}" onclick="addToPosCart(${item.id})">
+      <div class="mi-img">${item.image_url?`<img src="${item.image_url}" loading="lazy" onerror="this.style.display='none'">`:`<span>${getCatEmoji(item.category)}</span>`}</div>
+      <div class="mi-body">
+        <div class="mi-name">${item.name}</div>
+        ${item.name_tamil?`<div class="mi-tamil">${item.name_tamil}</div>`:''}
+        <div class="mi-price">₹${item.price}</div>
+      </div>
+      ${qty>0?`<div class="mi-qty">
+        <button class="qty-btn" onclick="event.stopPropagation();changePosQty(${item.id},-1)">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="event.stopPropagation();changePosQty(${item.id},1)">+</button>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function getCatEmoji(cat){const m={rice:'🍚',curry:'🍛',biryani:'🍖',roti:'🫓',snacks:'🥟',drinks:'🥤',dessert:'🍮'};return m[cat]||'🍽'}
+
+function posFilterCat(cat,btn){
+  posCurrentCat=cat;
+  document.querySelectorAll('#pos-cats .cat-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPosMenu(cat==='all'?allMenuItems:allMenuItems.filter(i=>i.category===cat));
+}
+
+function posSearch(q){
+  const filtered=allMenuItems.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())||(i.name_tamil||'').includes(q));
+  renderPosMenu(filtered);
+}
+
+function addToPosCart(itemId){
+  const item=allMenuItems.find(i=>i.id===itemId);if(!item)return;
+  if(!posCart[itemId])posCart[itemId]={item,qty:0};
+  posCart[itemId].qty++;
+  renderBill();renderPosMenu(posCurrentCat==='all'?allMenuItems:allMenuItems.filter(i=>i.category===posCurrentCat));
+}
+
+function changePosQty(itemId,d){
+  if(!posCart[itemId])return;
+  posCart[itemId].qty+=d;
+  if(posCart[itemId].qty<=0)delete posCart[itemId];
+  renderBill();renderPosMenu(posCurrentCat==='all'?allMenuItems:allMenuItems.filter(i=>i.category===posCurrentCat));
+}
+
+function renderBill(){
+  const items=Object.values(posCart);
+  const list=document.getElementById('bill-items-list');
+  const summary=document.getElementById('bill-summary');
+  if(!items.length){
+    list.innerHTML='<div class="bill-empty">🍽 Add items from the menu<br><span style="font-family:\'Noto Sans Tamil\',sans-serif;font-size:12px">மெனுவிலிருந்து ஐட்டங்கள் சேர்க்கவும்</span></div>';
+    summary.style.display='none';return;
+  }
+  summary.style.display='block';
+  list.innerHTML=items.map(({item,qty})=>`
+    <div class="bill-item-row">
+      <div class="bir-name">${item.name}${item.name_tamil?`<div class="bir-tamil">${item.name_tamil}</div>`:''}</div>
+      <div class="bir-qty-wrap">
+        <button class="qty-btn" style="width:20px;height:20px;font-size:12px" onclick="changePosQty(${item.id},-1)">−</button>
+        <span class="bir-qty">${qty}</span>
+        <button class="qty-btn" style="width:20px;height:20px;font-size:12px" onclick="changePosQty(${item.id},1)">+</button>
+      </div>
+      <div class="bir-price">₹${(qty*item.price).toFixed(0)}</div>
+      <button class="bir-del" onclick="changePosQty(${item.id},-999)">✕</button>
+    </div>`).join('');
+  const subtotal=items.reduce((s,{item,qty})=>s+qty*item.price,0);
+  const gstPct=settings.gst_percent||0;
+  const gstAmt=(subtotal*gstPct/100);
+  const total=subtotal+gstAmt;
+  document.getElementById('b-subtotal').textContent='₹'+subtotal.toFixed(2);
+  document.getElementById('b-gst-amt').textContent='₹'+gstAmt.toFixed(2);
+  document.getElementById('b-total').textContent='₹'+total.toFixed(2);
+  document.getElementById('b-gst-row').style.display=gstPct>0?'flex':'none';
+}
+
+function selectPayMode(btn){
+  payMode=btn.dataset.mode;
+  document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function clearBill(){posCart={};document.getElementById('b-table').value='';document.getElementById('b-customer').value='';renderBill();renderPosMenu(allMenuItems);toast('Bill cleared / பில் அழிக்கப்பட்டது','info')}
+
+async function saveBill(printAfter=true){
+  if(!Object.keys(posCart).length){toast('Add items first! / முதலில் ஐட்டங்கள் சேர்க்கவும்','error');return;}
+  const items=Object.values(posCart).map(({item,qty})=>({id:item.id,name:item.name,name_tamil:item.name_tamil||'',price:item.price,qty,subtotal:qty*item.price}));
+  const subtotal=items.reduce((s,i)=>s+i.subtotal,0);
+  const gstPct=settings.gst_percent||0;
+  const gstAmt=subtotal*gstPct/100;
+  const total=subtotal+gstAmt;
+  const{data:lastBill}=await db.from('hotel_bills').select('bill_no').order('bill_no',{ascending:false}).limit(1);
+  const billNo=(lastBill&&lastBill.length)?(lastBill[0].bill_no+1):1;
+  const{error}=await db.from('hotel_bills').insert([{bill_no:billNo,table_no:document.getElementById('b-table').value.trim()||null,customer_name:document.getElementById('b-customer').value.trim()||null,items,subtotal,gst_percent:gstPct,gst_amount:gstAmt,total_amount:total,payment_mode:payMode,status:'paid'}]);
+  if(error){toast(error.message,'error');return;}
+  toast(`Bill #${billNo} saved! / பில் சேமிக்கப்பட்டது`,'success');
+  if(printAfter)doPrint(billNo,items,subtotal,gstPct,gstAmt,total,document.getElementById('b-table').value,document.getElementById('b-customer').value,payMode);
+  clearBill();
+  document.getElementById('current-bill-no').textContent=billNo+1;
+}
+
+function printBillPreview(){
+  if(!Object.keys(posCart).length){toast('Add items first!','error');return;}
+  const items=Object.values(posCart).map(({item,qty})=>({name:item.name,name_tamil:item.name_tamil||'',price:item.price,qty,subtotal:qty*item.price}));
+  const subtotal=items.reduce((s,i)=>s+i.subtotal,0);
+  const gstPct=settings.gst_percent||0;
+  const gstAmt=subtotal*gstPct/100;
+  doPrint('PREVIEW',items,subtotal,gstPct,gstAmt,subtotal+gstAmt,document.getElementById('b-table').value,document.getElementById('b-customer').value,payMode);
+}
+
+function doPrint(billNo,items,subtotal,gstPct,gstAmt,total,table,customer,payMode){
+  const now=new Date();
+  const printerName=settings.printer_name||'XP-58';
+  
+  // Prepare print content
+  let printContent=`${settings.hotel_name||'My Hotel'}\n`;
+  if(settings.hotel_name_tamil)printContent+=`${settings.hotel_name_tamil}\n`;
+  if(settings.address)printContent+=`${settings.address}\n`;
+  if(settings.phone)printContent+=`Ph: ${settings.phone}\n`;
+  if(settings.gst_no)printContent+=`GST: ${settings.gst_no}\n`;
+  printContent+=`\n${'='.repeat(40)}\n`;
+  printContent+=`Bill #: ${billNo} | ${now.toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}\n`;
+  if(table)printContent+=`Table: ${table}\n`;
+  if(customer)printContent+=`Customer: ${customer}\n`;
+  printContent+=`${'='.repeat(40)}\n`;
+  printContent+=`Item                          Amt\n`;
+  printContent+=`${'='.repeat(40)}\n`;
+  items.forEach(i=>{
+    const line=`${i.name} x${i.qty}`.padEnd(25)+` ₹${i.subtotal.toFixed(0)}`;
+    printContent+=line+'\n';
+    if(i.name_tamil)printContent+=`${i.name_tamil}\n`;
+  });
+  printContent+=`${'='.repeat(40)}\n`;
+  printContent+=`Subtotal                  ₹${subtotal.toFixed(2)}\n`;
+  if(gstPct>0)printContent+=`GST (${gstPct}%)                    ₹${gstAmt.toFixed(2)}\n`;
+  printContent+=`TOTAL                     ₹${total.toFixed(2)}\n`;
+  printContent+=`Payment: ${payMode.toUpperCase()}\n`;
+  printContent+=`${'='.repeat(40)}\n`;
+  printContent+=`${settings.footer_text||'Thank you! Visit Again'}\n`;
+
+  // QZ Tray printing
+  qz.websocket.connect().then(() => {
+    let config = qz.configs.create(printerName);
+    config.recoverPaper = true;
+    
+    let data = [{
+      type: 'raw',
+      format: 'plain',
+      data: printContent
+    }];
+
+    return qz.print(config, data);
+  }).then(() => {
+    toast('Bill sent to printer! / பில் பிரிண்டர்-க்கு அனுப்பப்பட்டது','success');
+  }).catch(err => {
+    console.error('QZ Tray Error:', err);
+    toast('Printer error / பிரிண்டர் பிழை: '+err.message,'error');
+    // Fallback to browser print
+    document.getElementById('print-area').innerHTML=printContent.replace(/\n/g,'<br>');
+    window.print();
+  });
+}
+
+// ── ALL BILLS ──
+async function loadBills(){
+  const dateFilter=document.getElementById('bill-date-filter').value;
+  const payFilter=document.getElementById('bill-pay-filter').value;
+  let q=db.from('hotel_bills').select('*').order('created_at',{ascending:false}).limit(200);
+  if(dateFilter)q=q.gte('created_at',dateFilter+'T00:00:00').lte('created_at',dateFilter+'T23:59:59');
+  if(payFilter)q=q.eq('payment_mode',payFilter);
+  const{data,error}=await q;
+  if(error){toast(error.message,'error');return;}
+  const bills=data||[];
+  const total=bills.reduce((s,b)=>s+(b.total_amount||0),0);
+  document.getElementById('bills-total-amt').textContent='₹'+total.toLocaleString('en-IN');
+  document.getElementById('all-bills-tbody').innerHTML=bills.map(b=>{
+    const items=Array.isArray(b.items)?b.items:[];
+    const d=new Date(b.created_at);
+    return`<tr>
+      <td><b>#${b.bill_no}</b></td>
+      <td style="font-size:12px">${d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}<br>${d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${b.table_no||'—'}</td>
+      <td>${b.customer_name||'—'}</td>
+      <td style="font-size:12px;color:var(--muted)">${items.slice(0,2).map(i=>i.name).join(', ')}${items.length>2?'...':''}</td>
+      <td>₹${b.subtotal||0}</td>
+      <td>₹${b.gst_amount||0}</td>
+      <td><b style="color:var(--primary2)">₹${b.total_amount}</b></td>
+      <td><span class="badge badge-paid">${b.payment_mode}</span></td>
+      <td><button class="btn btn-outline btn-xs" onclick="reprintBill(${b.id})">🖨 Print</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🧾</div>No bills found</div></td></tr>';
+}
+
+function clearBillFilters(){document.getElementById('bill-date-filter').value='';document.getElementById('bill-pay-filter').value='';loadBills();}
+
+async function reprintBill(id){
+  const{data}=await db.from('hotel_bills').select('*').eq('id',id).limit(1);
+  if(!data||!data.length)return;
+  const b=data[0];
+  doPrint(b.bill_no,b.items,b.subtotal,b.gst_percent,b.gst_amount,b.total_amount,b.table_no,b.customer_name,b.payment_mode);
+}
+
+// ── MENU ITEMS ──
+async function loadMenuItems(){
+  const{data}=await db.from('hotel_items').select('*').order('category');
+  allMenuItems=data||[];
+  renderMenuItems(allMenuItems);
+}
+
+function renderMenuItems(items){
+  const grid=document.getElementById('items-grid');
+  if(!items.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🍽</div>No items. Add your first item!</div>`;return;}
+  grid.innerHTML=items.map(item=>`
+    <div class="item-mgmt-card">
+      <div class="imc-img">
+        ${item.image_url?`<img src="${item.image_url}" onerror="this.style.display='none'">`:`<span>${getCatEmoji(item.category)}</span>`}
+        <div class="imc-avail" style="background:${item.is_available?'var(--green)':'var(--red)'}"></div>
+      </div>
+      <div class="imc-body">
+        <div class="imc-name">${item.name}</div>
+        ${item.name_tamil?`<div class="imc-tamil">${item.name_tamil}</div>`:''}
+        <div class="imc-price">₹${item.price}</div>
+        <div class="imc-cat">${getCatEmoji(item.category)} ${item.category}</div>
+      </div>
+      <div class="imc-actions">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="editItem(${item.id})">✏️ Edit</button>
+        <button class="btn ${item.is_available?'btn-amber':'btn-success'} btn-sm" onclick="toggleItem(${item.id},${item.is_available})">${item.is_available?'🔴 Hide':'🟢 Show'}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function filterMenuItems(cat,btn){
+  document.querySelectorAll('#items-cat-filter .cat-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMenuItems(cat==='all'?allMenuItems:allMenuItems.filter(i=>i.category===cat));
+}
+
+function openItemModal(id=null){
+  editingItemId=id;
+  document.getElementById('item-modal-title').textContent=id?'Edit Item / ஐட்டம் திருத்து':'Add Item / ஐட்டம் சேர்';
+  if(!id){['im-name','im-tamil','im-price','im-img-url'].forEach(x=>document.getElementById(x).value='');document.getElementById('im-category').value='rice';document.getElementById('im-available').checked=true;document.getElementById('item-img-preview').style.display='none';}
+  document.getElementById('item-modal').classList.add('open');
+}
+
+function closeItemModal(){document.getElementById('item-modal').classList.remove('open');editingItemId=null;}
+
+function previewItemImg(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{const p=document.getElementById('item-img-preview');p.src=ev.target.result;p.style.display='block'};r.readAsDataURL(f);
+}
+
+async function saveItem(){
+  const name=document.getElementById('im-name').value.trim();
+  const price=document.getElementById('im-price').value.trim();
+  if(!name||!price){toast('Name and price required!','error');return;}
+  const btn=document.getElementById('item-save-btn');btn.disabled=true;btn.textContent='Saving...';
+  let imageUrl=document.getElementById('im-img-url').value.trim();
+  const imgFile=document.getElementById('im-img-file').files[0];
+  if(imgFile){
+    const ext=imgFile.name.split('.').pop();
+    const fn=`hotel_${Date.now()}.${ext}`;
+    const{error:ue}=await db.storage.from('bakery-images').upload(fn,imgFile,{cacheControl:'3600',upsert:false});
+    if(!ue)imageUrl=db.storage.from('bakery-images').getPublicUrl(fn).data.publicUrl;
+  }
+  const obj={name,name_tamil:document.getElementById('im-tamil').value.trim(),price:parseFloat(price),category:document.getElementById('im-category').value,image_url:imageUrl||null,is_available:document.getElementById('im-available').checked};
+  const{error}=editingItemId?await db.from('hotel_items').update(obj).eq('id',editingItemId):await db.from('hotel_items').insert([obj]);
+  btn.disabled=false;btn.textContent='💾 Save Item';
+  if(error){toast(error.message,'error');return;}
+  toast(editingItemId?'Item updated!':'Item added! / ஐட்டம் சேர்க்கப்பட்டது','success');
+  closeItemModal();allMenuItems=[];loadMenuItems();
+}
+
+async function editItem(id){
+  const item=allMenuItems.find(i=>i.id===id);if(!item)return;
+  openItemModal(id);
+  setTimeout(()=>{
+    document.getElementById('im-name').value=item.name||'';
+    document.getElementById('im-tamil').value=item.name_tamil||'';
+    document.getElementById('im-price').value=item.price||'';
+    document.getElementById('im-category').value=item.category||'rice';
+    document.getElementById('im-img-url').value=item.image_url||'';
+    document.getElementById('im-available').checked=item.is_available;
+    if(item.image_url){const p=document.getElementById('item-img-preview');p.src=item.image_url;p.style.display='block';}
+  },100);
+}
+
+async function toggleItem(id,current){
+  const{error}=await db.from('hotel_items').update({is_available:!current}).eq('id',id);
+  if(error){toast(error.message,'error');return;}
+  toast(current?'Item hidden':'Item visible','success');
+  allMenuItems=[];loadMenuItems();
+}
+
+async function deleteItem(id){
+  if(!confirm('Delete this item? / இந்த ஐட்டத்தை நீக்கவா?'))return;
+  const{error}=await db.from('hotel_items').delete().eq('id',id);
+  if(error){toast(error.message,'error');return;}
+  toast('Item deleted','success');allMenuItems=[];loadMenuItems();
+}
+
+// ── NEXT DAY ORDERS ──
+function setTomorrow(){const t=new Date();t.setDate(t.getDate()+1);document.getElementById('ndo-filter-date').value=t.toISOString().split('T')[0];loadNextDayOrders();}
+
+async function loadNextDayOrders(){
+  const dateFilter=document.getElementById('ndo-filter-date').value;
+  let q=db.from('hotel_next_day_orders').select('*').order('created_at',{ascending:false});
+  if(dateFilter)q=q.eq('order_date',dateFilter);
+  const{data}=await q;
+  const orders=data||[];
+  // Grid view (grouped by item)
+  const itemMap={};
+  orders.forEach(o=>{if(!itemMap[o.item_name])itemMap[o.item_name]=0;itemMap[o.item_name]+=o.quantity});
+  const grid=document.getElementById('ndo-grid');
+  grid.innerHTML=Object.entries(itemMap).map(([name,qty])=>`
+    <div class="ndorder-card">
+      <div class="ndo-qty">${qty}</div>
+      <div class="ndo-name">${name}</div>
+    </div>`).join('')||'<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📅</div>No orders for this date</div>';
+  // Table
+  document.getElementById('ndo-tbody').innerHTML=orders.map(o=>`
+    <tr>
+      <td>${o.order_date}</td>
+      <td><b>${o.item_name}</b></td>
+      <td><b style="color:var(--primary2);font-size:15px">${o.quantity}</b></td>
+      <td style="color:var(--muted)">${o.notes||'—'}</td>
+      <td><button class="btn btn-danger btn-xs" onclick="deleteNdo(${o.id})">🗑</button></td>
+    </tr>`).join('')||'<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">📅</div>No orders</div></td></tr>';
+}
+
+function openNdoModal(){
+  const t=new Date();t.setDate(t.getDate()+1);
+  document.getElementById('ndo-date').value=t.toISOString().split('T')[0];
+  document.getElementById('ndo-qty').value='';
+  document.getElementById('ndo-notes').value='';
+  const sel=document.getElementById('ndo-item');
+  sel.innerHTML=allMenuItems.map(i=>`<option value="${i.id}" data-name="${i.name}">${i.name}${i.name_tamil?' / '+i.name_tamil:''}</option>`).join('');
+  document.getElementById('ndo-modal').classList.add('open');
+}
+function closeNdoModal(){document.getElementById('ndo-modal').classList.remove('open')}
+
+async function saveNdo(){
+  const sel=document.getElementById('ndo-item');
+  const qty=parseInt(document.getElementById('ndo-qty').value);
+  if(!qty||qty<1){toast('Enter valid quantity','error');return;}
+  const itemName=sel.options[sel.selectedIndex]?.dataset.name||'';
+  const{error}=await db.from('hotel_next_day_orders').insert([{order_date:document.getElementById('ndo-date').value,item_id:parseInt(sel.value),item_name:itemName,quantity:qty,notes:document.getElementById('ndo-notes').value.trim()}]);
+  if(error){toast(error.message,'error');return;}
+  toast('Order saved!','success');closeNdoModal();loadNextDayOrders();
+}
+
+async function deleteNdo(id){
+  await db.from('hotel_next_day_orders').delete().eq('id',id);
+  toast('Deleted','info');loadNextDayOrders();
+}
+
+function printNdo(){
+  const rows=document.getElementById('ndo-tbody').innerHTML;
+  const w=window.open('','_blank','width=500,height=600');
+  w.document.write(`<html><head><title>Next Day Orders</title><style>body{font-family:Arial,sans-serif;padding:20px}h2{text-align:center}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#2563eb;color:#fff}</style></head><body><h2>${settings.hotel_name} — Next Day Orders</h2><table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Notes</th></tr></thead><tbody>${rows.replace(/<button[^>]*>.*?<\/button>/g,'').replace(/<td><\/td>/g,'')}</tbody></table><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// ── REPORTS ──
+function initReportDates(){
+  const today=new Date().toISOString().split('T')[0];
+  const weekAgo=new Date();weekAgo.setDate(weekAgo.getDate()-6);
+  document.getElementById('rpt-from').value=weekAgo.toISOString().split('T')[0];
+  document.getElementById('rpt-to').value=today;
+  loadReports();
+}
+
+async function loadReports(){
+  const from=document.getElementById('rpt-from').value;
+  const to=document.getElementById('rpt-to').value;
+  if(!from||!to)return;
+  const{data}=await db.from('hotel_bills').select('*').gte('created_at',from+'T00:00:00').lte('created_at',to+'T23:59:59').order('created_at',{ascending:true});
+  const bills=data||[];
+  const revenue=bills.reduce((s,b)=>s+(b.total_amount||0),0);
+  const avg=bills.length?revenue/bills.length:0;
+  const cash=bills.filter(b=>b.payment_mode==='cash').reduce((s,b)=>s+(b.total_amount||0),0);
+  const digital=bills.filter(b=>b.payment_mode!=='cash').reduce((s,b)=>s+(b.total_amount||0),0);
+  document.getElementById('r-revenue').textContent='₹'+revenue.toLocaleString('en-IN');
+  document.getElementById('r-bills').textContent=bills.length;
+  document.getElementById('r-avg').textContent='₹'+Math.round(avg);
+  document.getElementById('r-cash').textContent='₹'+cash.toLocaleString('en-IN');
+  document.getElementById('r-digital').textContent='₹'+digital.toLocaleString('en-IN');
+  // Daily chart
+  const dayMap={};
+  bills.forEach(b=>{const d=b.created_at.split('T')[0];if(!dayMap[d])dayMap[d]=0;dayMap[d]+=b.total_amount||0});
+  const dayLabels=Object.keys(dayMap).map(d=>new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+  const dayVals=Object.values(dayMap);
+  if(chartObjs['rpt-daily']){chartObjs['rpt-daily'].destroy();}
+  chartObjs['rpt-daily']=new Chart(document.getElementById('rpt-daily-chart').getContext('2d'),{
+    type:'line',data:{labels:dayLabels,datasets:[{label:'Sales ₹',data:dayVals,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.1)',tension:.4,fill:true,pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:11}}}}}
+  });
+  // Payment pie
+  const upi=bills.filter(b=>b.payment_mode==='upi').reduce((s,b)=>s+(b.total_amount||0),0);
+  const card=bills.filter(b=>b.payment_mode==='card').reduce((s,b)=>s+(b.total_amount||0),0);
+  if(chartObjs['rpt-pay']){chartObjs['rpt-pay'].destroy();}
+  chartObjs['rpt-pay']=new Chart(document.getElementById('rpt-pay-chart').getContext('2d'),{
+    type:'doughnut',data:{labels:['Cash','UPI','Card'],datasets:[{data:[cash,upi,card],backgroundColor:['#16a34a','#2563eb','#7c3aed'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:12},padding:12}}}}
+  });
+  // Top items
+  const itemMap={};
+  bills.forEach(b=>{const items=Array.isArray(b.items)?b.items:[];items.forEach(i=>{if(!itemMap[i.name])itemMap[i.name]={qty:0,amt:0};itemMap[i.name].qty+=i.qty||1;itemMap[i.name].amt+=i.subtotal||0})});
+  const top=Object.entries(itemMap).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+  document.getElementById('rpt-top-items').innerHTML=top.length?`<table style="width:100%"><thead><tr><th style="padding:8px;text-align:left;background:var(--primary2);color:#fff;font-size:11px">Item</th><th style="padding:8px;background:var(--primary2);color:#fff;font-size:11px">Qty Sold</th><th style="padding:8px;background:var(--primary2);color:#fff;font-size:11px">Revenue</th></tr></thead><tbody>${top.map(([name,{qty,amt}],i)=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px;font-size:13px">${i+1}. ${name}</td><td style="padding:8px;font-weight:700;color:var(--primary2)">${qty}</td><td style="padding:8px;font-weight:700">₹${amt.toFixed(0)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state"><div class="empty-icon">📊</div>No data</div>';
+  // Bills table
+  document.getElementById('rpt-bills-tbody').innerHTML=bills.map(b=>{
+    const d=new Date(b.created_at);
+    return`<tr><td><b>#${b.bill_no}</b></td><td style="font-size:12px">${d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</td><td>${b.table_no||'—'}</td><td>${b.customer_name||'—'}</td><td><b style="color:var(--primary2)">₹${b.total_amount}</b></td><td><span class="badge badge-paid">${b.payment_mode}</span></td></tr>`;
+  }).join('')||'<tr><td colspan="6"><div class="empty-state">No bills in range</div></td></tr>';
+}
+
+function printReport(){
+  const from=document.getElementById('rpt-from').value;
+  const to=document.getElementById('rpt-to').value;
+  const content=document.getElementById('rpt-bills-tbody').innerHTML;
+  const w=window.open('','_blank','width=700,height=700');
+  w.document.write(`<html><head><title>Sales Report</title><style>body{font-family:Arial,sans-serif;padding:20px}h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #ddd;padding:7px;text-align:left;font-size:12px}th{background:#2563eb;color:#fff}.stat{display:inline-block;background:#f1f5f9;border-radius:8px;padding:8px 16px;margin:4px;font-size:13px}</style></head><body><h2>${settings.hotel_name} — Sales Report</h2><p style="text-align:center;color:#666">${from} to ${to}</p><div style="margin:12px 0;text-align:center"><span class="stat">Revenue: <b>₹${document.getElementById('r-revenue').textContent}</b></span><span class="stat">Bills: <b>${document.getElementById('r-bills').textContent}</b></span><span class="stat">Avg: <b>${document.getElementById('r-avg').textContent}</b></span></div><table><thead><tr><th>Bill #</th><th>Date</th><th>Table</th><th>Customer</th><th>Total</th><th>Payment</th></tr></thead><tbody>${content}</tbody></table><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+  w.document.close();
+}
+
+// ── INIT ──
+loadSettings();
+loadDashboard();
+setTomorrow();
+loadMenuItems();
+</script>
+</body>
+</html>
